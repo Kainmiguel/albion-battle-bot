@@ -1,121 +1,89 @@
 import os
-import asyncio
-import logging
-import aiohttp
 import discord
+from discord.ext import commands
+from bs4 import BeautifulSoup
+import requests
+from flask import Flask
+import threading
+import logging
 
+# Configurações
+TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_NAME = "Os Viriatos"
-GUILD_ID = "sMgQvZkqQy-QdnRZ1GmfFw"
-MIN_PLAYERS = 5
+CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))  # Coloca o ID correto no .env
+MIN_MEMBERS = 5
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(message)s")
-
+# Intents e bot
 intents = discord.Intents.default()
 intents.message_content = True
-client = discord.Client(intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
-DISCORD_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID", "0"))
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+# Flask app para manter vivo no Railway
+app = Flask(__name__)
 
-last_battle_id = 0
+@app.route("/")
+def home():
+    return "Bot ativo!"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-    "Accept": "application/json",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Referer": "https://albiononline.com/",
-    "Origin": "https://albiononline.com/"
-}
+def run_flask():
+    app.run(host="0.0.0.0", port=8080)
 
-async def fetch_guild_battles(session):
-    url = (f"https://gameinfo-ams.albiononline.com/api/gameinfo/battles"
-           f"?limit=50&sort=recent&guildId={GUILD_ID}")
-    async with session.get(url, headers=HEADERS) as response:
-        if response.status != 200:
-            logging.error(f"Falha ao obter lista de batalhas (status {response.status})")
-            return []
-        return await response.json()
+# Web scraping AlbionBattles
+def get_latest_battle_link(min_members=MIN_MEMBERS):
+    url = "https://eu.albionbattles.com/?search=Os+Viriatos"
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
-async def fetch_battle_details(session, battle_id):
-    url = f"https://gameinfo-ams.albiononline.com/api/gameinfo/battles/{battle_id}"
-    async with session.get(url, headers=HEADERS) as response:
-        if response.status != 200:
-            logging.error(f"Falha ao obter detalhes da batalha {battle_id} (status {response.status})")
-            return None
-        return await response.json()
+    try:
+        res = requests.get(url, headers=headers)
+        soup = BeautifulSoup(res.text, "html.parser")
+        battle_links = soup.select("a[href^='/battles/']")
 
-async def check_new_battles():
-    global last_battle_id
-    async with aiohttp.ClientSession() as session:
-        while True:
-            try:
-                battles = await fetch_guild_battles(session)
-                if not battles:
-                    await asyncio.sleep(60)
+        seen = set()
+        for link_tag in battle_links:
+            href = link_tag['href']
+            if href in seen:
+                continue
+            seen.add(href)
+
+            battle_url = f"https://eu.albionbattles.com{href}"
+            battle_page = requests.get(battle_url, headers=headers)
+            battle_soup = BeautifulSoup(battle_page.text, "html.parser")
+
+            guilds = battle_soup.select("div.flex.items-center.space-x-2 span.font-semibold")
+            counts = battle_soup.select("div.flex.items-center.space-x-2 span.text-sm.text-muted")
+
+            for g, c in zip(guilds, counts):
+                guild = g.text.strip().lower()
+                count_text = c.text.strip().split()[0]
+                try:
+                    count = int(count_text)
+                except ValueError:
                     continue
+                if guild == GUILD_NAME.lower() and count >= min_members:
+                    return battle_url
+        return None
+    except Exception as e:
+        print("[ERRO] Falha ao verificar batalhas:", e)
+        return None
 
-                new_battles = [b for b in battles if isinstance(b, dict) and b.get('id') and b['id'] > last_battle_id]
-                new_battles.sort(key=lambda b: b['id'])
+# Comando Discord
+@bot.command(name="forcarbatalha")
+async def forcar_batalha(ctx):
+    await ctx.send("🔍 A verificar batalha fixa no AlbionBB...")
+    link = get_latest_battle_link()
+    if link:
+        await ctx.send(f"🏴 NOVA BATALHA DE {GUILD_NAME.upper()}\n👉 Depositem o loot na tab da guild\n📺 Postem as vossas VODS\n✍️ A vossa presença foi anotada\n{link}")
+    else:
+        await ctx.send(f"❌ A guilda {GUILD_NAME} não teve {MIN_MEMBERS}+ membros nas últimas batalhas.")
 
-                for battle in new_battles:
-                    battle_id = battle['id']
-                    details = await fetch_battle_details(session, battle_id)
-                    if not details:
-                        continue
-
-                    guild_entry = None
-                    for guild in details.get('guilds', []):
-                        if isinstance(guild, dict) and guild.get('name') == GUILD_NAME:
-                            guild_entry = guild
-                            break
-
-                    if guild_entry:
-                        players_count = guild_entry.get('players') or guild_entry.get('memberCount') or 0
-                    else:
-                        players_count = sum(
-                            1 for player in details.get('players', [])
-                            if isinstance(player, dict) and player.get('guildName') == GUILD_NAME
-                        )
-
-                    logging.debug(f"Guilda '{GUILD_NAME}' encontrada na batalha {battle_id} com {players_count} jogadores.")
-
-                    if players_count >= MIN_PLAYERS:
-                        total_kills = details.get('totalKills', 0)
-                        total_fame = details.get('totalFame', 0)
-                        battle_time = details.get('startTime', '')
-                        message = (
-                            f"🏴 **Nova batalha de {GUILD_NAME}!**\n"
-                            f"> 🆔 Batalha ID: `{battle_id}`\n"
-                            f"> 🕒 Início: `{battle_time}`\n"
-                            f"> 👥 Participação: `{players_count}` membros\n"
-                            f"> ⚔️ Abates: `{total_kills}`\n"
-                            f"> 💰 Fama Total: `{total_fame}`\n"
-                            f"> 🔗 Detalhes: https://eu.albionbattles.com/battles/{battle_id}"
-                        )
-                        channel = client.get_channel(DISCORD_CHANNEL_ID)
-                        if channel:
-                            await channel.send(message)
-                            logging.info(f"Batalha {battle_id} publicada com sucesso!")
-                        else:
-                            logging.error("Canal do Discord inválido. Verifique o DISCORD_CHANNEL_ID.")
-
-                    if battle_id > last_battle_id:
-                        last_battle_id = battle_id
-
-                await asyncio.sleep(60)
-
-            except Exception as e:
-                logging.exception(f"Erro no loop de verificação de batalhas: {e}")
-                await asyncio.sleep(30)
-
-@client.event
+# Inicialização
+@bot.event
 async def on_ready():
-    logging.info(f"🤖 Bot conectado como {client.user} (ID: {client.user.id})")
-    client.loop.create_task(check_new_battles())
+    print(f"{bot.user} está online com scraping AlbionBB ativo! ⚔️")
 
 if __name__ == "__main__":
-    if not DISCORD_TOKEN:
-        logging.error("❌ DISCORD_TOKEN não encontrado. Define nas variáveis de ambiente.")
-    else:
-        client.run(DISCORD_TOKEN)
+    threading.Thread(target=run_flask).start()
+    print("🚀 Bot iniciado com AlbionBB scraping.")
+    bot.run(TOKEN)
