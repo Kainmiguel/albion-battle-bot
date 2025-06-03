@@ -2,3 +2,4 @@ requests
 flask
 discord.py
 pytz
+beautifulsoup4
