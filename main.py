@@ -6,6 +6,7 @@ import os
 import re
 from flask import Flask
 from threading import Thread
+import time
 
 # 🔧 Flask para manter Railway ativo
 app = Flask(__name__)
@@ -90,8 +91,21 @@ async def forcar_batalha(ctx):
 
     await ctx.send("❌ Nenhuma batalha com 10+ membros da guilda foi encontrada.")
 
-# 🔄 Ativar o servidor Flask
+# 🔄 Ativar servidor Flask
 keep_alive()
 
-# 🚀 Iniciar o bot Discord
-bot.run(os.getenv("DISCORD_TOKEN"))
+# 🚀 Iniciar o bot Discord com proteção contra falhas
+token = os.getenv("DISCORD_TOKEN")
+
+if not token:
+    print("❌ ERRO: Token DISCORD_TOKEN não está definido nas variáveis de ambiente.")
+    while True:
+        time.sleep(60)
+else:
+    print("🚀 Token carregado. Iniciando bot...")
+    try:
+        bot.run(token)
+    except Exception as e:
+        print("❌ ERRO ao iniciar o bot:", e)
+        while True:
+            time.sleep(60)
