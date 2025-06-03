@@ -5,7 +5,6 @@ from datetime import datetime
 import json
 import os
 
-# Configurações
 GUILD_ID = "sMgQvZkqQy-QdnRZ1GmfFw"
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 EVENTS_API = f"https://gameinfo.albiononline.com/api/gameinfo/guilds/{GUILD_ID}/deaths?limit=50"
@@ -40,17 +39,16 @@ def group_deaths(deaths):
             grouped.append({"time": ts, "location": death["Location"], "deaths": [death]})
     return grouped
 
-def format_embed(group):
-    deaths = group["deaths"]
-    location = group["location"]
-    time_str = group["time"].strftime("%d/%m %H:%M")
-    killers = set(d["Killer"]["Name"] for d in deaths if d["Killer"])
-    victims = set(d["Victim"]["Name"] for d in deaths)
+def format_embed():
     embed = {
-        "title": f"⚔️ Nova Batalha em {location}",
-        "description": f"🕒 **{time_str}**\\n💀 Mortes: **{len(deaths)}**\\n🎯 Atacantes: {len(killers)}\\n☠️ Vítimas: {len(victims)}",
+        "title": "🏴 NOVA BATALHA DE Os Viriatos",
+        "description": (
+            "👉 Depositem o loot na tab da guild\n"
+            "📺 Postem as vossas VODS\n"
+            "✍️ A vossa presença foi anotada"
+        ),
         "url": "https://europe.albionbb.com/?search=Os+Viriatos",
-        "color": 16711680
+        "color": 0
     }
     return {"embeds": [embed]}
 
@@ -72,20 +70,8 @@ def main_loop():
             deaths = get_recent_deaths()
             groups = group_deaths(deaths)
             for group in groups:
-                if len(group["deaths"]) < 3:
-                    continue
-                ids = [d["EventId"] for d in group["deaths"]]
-                if any(eid in posted_ids for eid in ids):
-                    continue
-                embed = format_embed(group)
-                if post_to_discord(embed):
-                    print(f"✅ Batalha postada com {len(group['deaths'])} mortes.")
-                    posted_ids.update(ids)
-                    save_ids()
-        except Exception as e:
-            print(f"Erro: {e}")
-        time.sleep(CHECK_INTERVAL)
-
-if __name__ == "__main__":
-    main_loop()
-
+                guild_players = set()
+                for death in group["deaths"]:
+                    if death["Victim"]["GuildName"] == "Os Viriatos":
+                        guild_players.add(death["Victim"]["Name"])
+                    if death["]()
