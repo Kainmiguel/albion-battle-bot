@@ -55,7 +55,7 @@ async def check_new_battles():
                     await asyncio.sleep(60)
                     continue
 
-                new_battles = [b for b in battles if b.get('id') and b['id'] > last_battle_id]
+                new_battles = [b for b in battles if isinstance(b, dict) and b.get('id') and b['id'] > last_battle_id]
                 new_battles.sort(key=lambda b: b['id'])
 
                 for battle in new_battles:
@@ -75,7 +75,7 @@ async def check_new_battles():
                     else:
                         players_count = sum(
                             1 for player in details.get('players', [])
-                            if player.get('guildName') == GUILD_NAME
+                            if isinstance(player, dict) and player.get('guildName') == GUILD_NAME
                         )
 
                     logging.debug(f"Guilda '{GUILD_NAME}' encontrada na batalha {battle_id} com {players_count} jogadores.")
