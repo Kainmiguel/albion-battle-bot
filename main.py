@@ -46,38 +46,47 @@ async def forcar_batalha(ctx):
         return
 
     soup = BeautifulSoup(res.text, "html.parser")
-    cards = soup.select("div.card-body")
+    battle_links = soup.select("a[href^='/battles/']")
 
-    if not cards:
+    if not battle_links:
         await ctx.send("❌ Nenhuma batalha encontrada no AlbionBB.")
         return
 
-    for card in cards:
-        title_elem = card.select_one("h5")
-        link_elem = card.select_one("a[href*='battle']")
-        time_elem = card.select_one("small.text-muted")
-        content_text = card.get_text()
-
-        if not (title_elem and link_elem):
+    for link in battle_links:
+        battle_url = "https://europe.albionbb.com" + link["href"]
+        battle_res = requests.get(battle_url)
+        if battle_res.status_code != 200:
             continue
 
-        guild_count = len(re.findall(r'Os Viriatos', content_text))
-        if guild_count < 10:
+        battle_soup = BeautifulSoup(battle_res.text, "html.parser")
+        guilds_header = battle_soup.find("h2", string="Guilds")
+        if not guilds_header:
             continue
 
-        title = title_elem.text.strip()
-        link = "https://europe.albionbb.com" + link_elem["href"]
-        timestamp = time_elem.text.strip() if time_elem else ""
+        guilds_table = guilds_header.find_next("table")
+        if not guilds_table:
+            continue
 
-        embed = discord.Embed(
-            title="🏴 NOVA BATALHA DE Os Viriatos",
-            description=f"👉 Depositem o loot na tab da guild\n📺 Postem as vossas VODS\n✍️ A vossa presença foi anotada\n\n🕒 {timestamp}",
-            url=link,
-            color=0
-        )
-        embed.set_image(url="https://cdn.discordapp.com/attachments/1366525638621528074/1379488133355147375/albion_zvz.jpeg")
-        await ctx.send(embed=embed)
-        return
+        rows = guilds_table.find_all("tr")[1:]  # Ignora cabeçalho
+        for row in rows:
+            cells = row.find_all("td")
+            if len(cells) < 2:
+                continue
+            guild_name = cells[0].get_text(strip=True)
+            players = int(cells[1].get_text(strip=True))
+            if "Os Viriatos" in guild_name and players >= 10:
+                timestamp_elem = battle_soup.find("h1")
+                timestamp = timestamp_elem.get_text(strip=True) if timestamp_elem else "Data desconhecida"
+
+                embed = discord.Embed(
+                    title="🏴 NOVA BATALHA DE Os Viriatos",
+                    description=f"👉 Depositem o loot na tab da guild\n📺 Postem as vossas VODS\n✍️ A vossa presença foi anotada\n\n🕒 {timestamp}",
+                    url=battle_url,
+                    color=0
+                )
+                embed.set_image(url="https://cdn.discordapp.com/attachments/1366525638621528074/1379488133355147375/albion_zvz.jpeg")
+                await ctx.send(embed=embed)
+                return
 
     await ctx.send("❌ Nenhuma batalha com 10+ membros da guilda foi encontrada.")
 
