@@ -58,23 +58,24 @@ async def forcar_batalha(ctx):
         if "guild" in headers and "players" in headers:
             rows = table.find_all("tr")[1:]
             for row in rows:
-                cells = row.find_all("td")
-                if len(cells) < 2:
-                    continue
-                guild_name_raw = cells[0].get_text(separator=" ", strip=True)
-                players_text = cells[1].get_text(strip=True)
+    cells = row.find_all("td")
+    if len(cells) < 2:
+        continue
+    guild_name_raw = cells[0].get_text(separator=" ", strip=True)
+    players_text = cells[1].get_text(strip=True)
 
-                guild_name = re.sub(r"\s+", " ", guild_name_raw).lower()
-                print(f"[DEBUG] Guilda encontrada: '{guild_name}' com {players_text} jogadores")
+    guild_name = re.sub(r"\s+", " ", guild_name_raw).lower()
+    print(f"[DEBUG] Guilda encontrada: '{guild_name}' com {players_text} jogadores")
 
-                try:
-                    players = int(players_text)
-                except ValueError:
-                    continue
+    try:
+        players = int(players_text)
+    except ValueError:
+        continue
 
-                if "os viriatos" in guild_name and players >= 10:
-                    encontrou = True
-                    break
+    if "os viriatos" in guild_name and players >= 10:
+        encontrou = True
+        break
+
 
     if encontrou:
         timestamp_elem = soup.find("h1")
