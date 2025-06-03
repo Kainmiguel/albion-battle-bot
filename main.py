@@ -4,15 +4,12 @@ import logging
 import aiohttp
 import discord
 
-# Configurações e constantes
 GUILD_NAME = "Os Viriatos"
 GUILD_ID = "sMgQvZkqQy-QdnRZ1GmfFw"
 MIN_PLAYERS = 5
 
-# Logger
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(message)s")
 
-# Discord bot
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
@@ -22,11 +19,19 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
 last_battle_id = 0
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "Accept": "application/json",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Referer": "https://albiononline.com/",
+    "Origin": "https://albiononline.com/"
+}
+
 async def fetch_guild_battles(session):
     url = (f"https://gameinfo-ams.albiononline.com/api/gameinfo/battles"
            f"?limit=50&sort=recent&guildId={GUILD_ID}")
-    headers = {"User-Agent": "Mozilla/5.0"}
-    async with session.get(url, headers=headers) as response:
+    async with session.get(url, headers=HEADERS) as response:
         if response.status != 200:
             logging.error(f"Falha ao obter lista de batalhas (status {response.status})")
             return []
@@ -34,8 +39,7 @@ async def fetch_guild_battles(session):
 
 async def fetch_battle_details(session, battle_id):
     url = f"https://gameinfo-ams.albiononline.com/api/gameinfo/battles/{battle_id}"
-    headers = {"User-Agent": "Mozilla/5.0"}
-    async with session.get(url, headers=headers) as response:
+    async with session.get(url, headers=HEADERS) as response:
         if response.status != 200:
             logging.error(f"Falha ao obter detalhes da batalha {battle_id} (status {response.status})")
             return None
@@ -113,3 +117,4 @@ if __name__ == "__main__":
         logging.error("❌ DISCORD_TOKEN não encontrado. Define nas variáveis de ambiente.")
     else:
         client.run(DISCORD_TOKEN)
+
