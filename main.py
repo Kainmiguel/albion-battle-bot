@@ -41,7 +41,7 @@ async def forcar_batalha(ctx):
 
         # Contar quantas vezes "Os Viriatos" aparece (indicando presença de membros)
         guild_count = len(re.findall(r'Os Viriatos', content_text))
-        if guild_count < 10:
+        if guild_count < 4:
             continue
 
         title = title_elem.text.strip()
