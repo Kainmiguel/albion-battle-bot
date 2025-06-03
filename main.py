@@ -47,8 +47,6 @@ async def forcar_batalha(ctx):
         return
 
     soup = BeautifulSoup(res.text, "html.parser")
-
-    # Procurar todas as tabelas
     tables = soup.find_all("table")
     if not tables:
         await ctx.send("❌ Nenhuma tabela encontrada na página da batalha.")
@@ -56,21 +54,25 @@ async def forcar_batalha(ctx):
 
     encontrou = False
     for table in tables:
-        headers = [th.get_text(strip=True) for th in table.find_all("th")]
-        if "Guild" in headers and "Players" in headers:
+        headers = [th.get_text(strip=True).lower() for th in table.find_all("th")]
+        if "guild" in headers and "players" in headers:
             rows = table.find_all("tr")[1:]
             for row in rows:
                 cells = row.find_all("td")
                 if len(cells) < 2:
                     continue
-                guild_name = cells[0].get_text(strip=True)
+                guild_name_raw = cells[0].get_text(separator=" ", strip=True)
                 players_text = cells[1].get_text(strip=True)
+
+                guild_name = re.sub(r"\s+", " ", guild_name_raw).lower()
+                print(f"[DEBUG] Guilda encontrada: '{guild_name}' com {players_text} jogadores")
+
                 try:
                     players = int(players_text)
                 except ValueError:
                     continue
 
-                if "Os Viriatos" in guild_name and players >= 10:
+                if "os viriatos" in guild_name and players >= 10:
                     encontrou = True
                     break
 
@@ -88,6 +90,7 @@ async def forcar_batalha(ctx):
         await ctx.send(embed=embed)
     else:
         await ctx.send("❌ A guilda Os Viriatos não teve 10+ membros nesta batalha.")
+
 
 # 🔄 Ativar servidor Flask
 keep_alive()
