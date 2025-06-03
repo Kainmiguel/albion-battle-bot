@@ -52,7 +52,7 @@ async def forcar_batalha(ctx):
         await ctx.send("❌ Nenhuma batalha encontrada no AlbionBB.")
         return
 
-        for card in cards:
+    for card in cards:
         title_elem = card.select_one("h5")
         link_elem = card.select_one("a[href*='battle']")
         time_elem = card.select_one("small.text-muted")
@@ -81,13 +81,8 @@ async def forcar_batalha(ctx):
 
     await ctx.send("❌ Nenhuma batalha com 10+ membros da guilda foi encontrada.")
 
-
 # 🔄 Ativar o servidor Flask
 keep_alive()
 
 # 🚀 Iniciar o bot Discord
-bot.run(os.getenv("DISCORD_TOKEN"))
-
-    await ctx.send("❌ Nenhuma batalha com 10+ membros da guilda foi encontrada.")
-
 bot.run(os.getenv("DISCORD_TOKEN"))
