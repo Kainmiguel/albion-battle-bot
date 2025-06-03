@@ -11,7 +11,12 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"{bot.user} está online com filtro de 10+ membros! ⚔️")
+    print(f"{bot.user} está online com modo DEBUG! 🛠️")
+
+@bot.event
+async def on_message(message):
+    print(f"[DEBUG] Mensagem recebida: {message.content} de {message.author}")
+    await bot.process_commands(message)
 
 @bot.command(name="forcarbatalha")
 async def forcar_batalha(ctx):
@@ -39,9 +44,8 @@ async def forcar_batalha(ctx):
         if not (title_elem and link_elem):
             continue
 
-        # Contar quantas vezes "Os Viriatos" aparece (indicando presença de membros)
         guild_count = len(re.findall(r'Os Viriatos', content_text))
-        if guild_count < 4:
+        if guild_count < 10:
             continue
 
         title = title_elem.text.strip()
