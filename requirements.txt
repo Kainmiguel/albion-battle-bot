@@ -1,5 +1,4 @@
-requests
-flask
 discord.py
-pytz
+requests
 beautifulsoup4
+flask
