@@ -48,6 +48,9 @@ def format_embed():
             "✍️ A vossa presença foi anotada"
         ),
         "url": "https://europe.albionbb.com/?search=Os+Viriatos",
+        "image": {
+            "url": "https://cdn.discordapp.com/attachments/1366525638621528074/1379488133355147375/albion_zvz.jpeg"
+        },
         "color": 0
     }
     return {"embeds": [embed]}
@@ -63,15 +66,4 @@ def save_ids():
     with open(EVENT_HISTORY_FILE, "w") as f:
         json.dump(list(posted_ids), f)
 
-def main_loop():
-    print("Bot do Albion Online iniciado...")
-    while True:
-        try:
-            deaths = get_recent_deaths()
-            groups = group_deaths(deaths)
-            for group in groups:
-                guild_players = set()
-                for death in group["deaths"]:
-                    if death["Victim"]["GuildName"] == "Os Viriatos":
-                        guild_players.add(death["Victim"]["Name"])
-                    if death["]()
+def main_loop():_
