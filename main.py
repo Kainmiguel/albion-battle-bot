@@ -79,7 +79,8 @@ async def forcar_batalha(ctx):
                 try:
                     players = int(players_text)
                 except ValueError:
-                    continue
+                    print(f"[DEBUG] Jogadores inválido para '{guild_name}': '{players_text}'")
+                    players = 0  # Tratar como 0 se inválido
 
                 if "os viriatos" in guild_name and players >= 10:
                     encontrou = True
