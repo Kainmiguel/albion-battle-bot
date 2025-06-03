@@ -58,24 +58,24 @@ async def forcar_batalha(ctx):
         if "guild" in headers and "players" in headers:
             rows = table.find_all("tr")[1:]
             for row in rows:
-    cells = row.find_all("td")
-    if len(cells) < 2:
-        continue
-    guild_name_raw = cells[0].get_text(separator=" ", strip=True)
-    players_text = cells[1].get_text(strip=True)
+                cells = row.find_all("td")
+                if len(cells) < 2:
+                    continue
+                guild_name_raw = cells[0].get_text(separator=" ", strip=True)
+                players_text = cells[1].get_text(strip=True)
 
-    guild_name = re.sub(r"\s+", " ", guild_name_raw).lower()
-    print(f"[DEBUG] Guilda encontrada: '{guild_name}' com {players_text} jogadores")
+                # 💬 Debug: imprimir nome da guilda
+                guild_name = re.sub(r"\s+", " ", guild_name_raw).lower()
+                print(f"[DEBUG] Guilda encontrada: '{guild_name}' com {players_text} jogadores")
 
-    try:
-        players = int(players_text)
-    except ValueError:
-        continue
+                try:
+                    players = int(players_text)
+                except ValueError:
+                    continue
 
-    if "os viriatos" in guild_name and players >= 10:
-        encontrou = True
-        break
-
+                if "os viriatos" in guild_name and players >= 10:
+                    encontrou = True
+                    break
 
     if encontrou:
         timestamp_elem = soup.find("h1")
@@ -83,31 +83,4 @@ async def forcar_batalha(ctx):
 
         embed = discord.Embed(
             title="🏴 NOVA BATALHA DE Os Viriatos",
-            description=f"👉 Depositem o loot na tab da guild\n📺 Postem as vossas VODS\n✍️ A vossa presença foi anotada\n\n🕒 {timestamp}",
-            url=battle_url,
-            color=0
-        )
-        embed.set_image(url="https://cdn.discordapp.com/attachments/1366525638621528074/1379488133355147375/albion_zvz.jpeg")
-        await ctx.send(embed=embed)
-    else:
-        await ctx.send("❌ A guilda Os Viriatos não teve 10+ membros nesta batalha.")
-
-
-# 🔄 Ativar servidor Flask
-keep_alive()
-
-# 🚀 Iniciar o bot Discord com verificação de token
-token = os.getenv("DISCORD_TOKEN")
-
-if not token:
-    print("❌ ERRO: Token DISCORD_TOKEN não está definido nas variáveis de ambiente.")
-    while True:
-        time.sleep(60)
-else:
-    print("🚀 Token carregado. Iniciando bot...")
-    try:
-        bot.run(token)
-    except Exception as e:
-        print("❌ ERRO ao iniciar o bot:", e)
-        while True:
-            time.sleep(60)
+            description=f"👉 Depositem o loot
