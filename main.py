@@ -66,15 +66,17 @@ async def check_new_battles():
 
                     guild_entry = None
                     for guild in details.get('guilds', []):
-                        if guild.get('name') == GUILD_NAME:
+                        if isinstance(guild, dict) and guild.get('name') == GUILD_NAME:
                             guild_entry = guild
                             break
 
                     if guild_entry:
                         players_count = guild_entry.get('players') or guild_entry.get('memberCount') or 0
                     else:
-                        players_count = sum(1 for player in details.get('players', [])
-                                             if player.get('guildName') == GUILD_NAME)
+                        players_count = sum(
+                            1 for player in details.get('players', [])
+                            if player.get('guildName') == GUILD_NAME
+                        )
 
                     logging.debug(f"Guilda '{GUILD_NAME}' encontrada na batalha {battle_id} com {players_count} jogadores.")
 
@@ -117,4 +119,3 @@ if __name__ == "__main__":
         logging.error("❌ DISCORD_TOKEN não encontrado. Define nas variáveis de ambiente.")
     else:
         client.run(DISCORD_TOKEN)
-
