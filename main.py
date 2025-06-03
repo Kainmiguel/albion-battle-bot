@@ -43,47 +43,51 @@ async def forcar_batalha(ctx):
     battle_url = "https://europe.albionbb.com/battles/198916189"
     res = requests.get(battle_url)
     if res.status_code != 200:
-        await ctx.send("❌ Erro ao aceder à batalha.")
+        await ctx.send("❌ Erro ao aceder à página da batalha.")
         return
 
     soup = BeautifulSoup(res.text, "html.parser")
-    guilds_header = soup.find("h2", string="Guilds")
-    if not guilds_header:
-        await ctx.send("❌ Não foi possível encontrar a secção de guildas.")
+
+    # Procurar todas as tabelas
+    tables = soup.find_all("table")
+    if not tables:
+        await ctx.send("❌ Nenhuma tabela encontrada na página da batalha.")
         return
 
-    guilds_table = guilds_header.find_next("table")
-    if not guilds_table:
-        await ctx.send("❌ Não foi possível encontrar a tabela de guildas.")
-        return
+    encontrou = False
+    for table in tables:
+        headers = [th.get_text(strip=True) for th in table.find_all("th")]
+        if "Guild" in headers and "Players" in headers:
+            rows = table.find_all("tr")[1:]
+            for row in rows:
+                cells = row.find_all("td")
+                if len(cells) < 2:
+                    continue
+                guild_name = cells[0].get_text(strip=True)
+                players_text = cells[1].get_text(strip=True)
+                try:
+                    players = int(players_text)
+                except ValueError:
+                    continue
 
-    rows = guilds_table.find_all("tr")[1:]  # Ignora o cabeçalho
-    for row in rows:
-        cells = row.find_all("td")
-        if len(cells) < 2:
-            continue
-        guild_name = cells[0].get_text(strip=True)
-        players_text = cells[1].get_text(strip=True)
-        try:
-            players = int(players_text)
-        except ValueError:
-            continue
+                if "Os Viriatos" in guild_name and players >= 10:
+                    encontrou = True
+                    break
 
-        if "Os Viriatos" in guild_name and players >= 10:
-            timestamp_elem = soup.find("h1")
-            timestamp = timestamp_elem.get_text(strip=True) if timestamp_elem else "Data desconhecida"
+    if encontrou:
+        timestamp_elem = soup.find("h1")
+        timestamp = timestamp_elem.get_text(strip=True) if timestamp_elem else "Data desconhecida"
 
-            embed = discord.Embed(
-                title="🏴 NOVA BATALHA DE Os Viriatos",
-                description=f"👉 Depositem o loot na tab da guild\n📺 Postem as vossas VODS\n✍️ A vossa presença foi anotada\n\n🕒 {timestamp}",
-                url=battle_url,
-                color=0
-            )
-            embed.set_image(url="https://cdn.discordapp.com/attachments/1366525638621528074/1379488133355147375/albion_zvz.jpeg")
-            await ctx.send(embed=embed)
-            return
-
-    await ctx.send("❌ A guilda Os Viriatos não teve 10+ membros nesta batalha.")
+        embed = discord.Embed(
+            title="🏴 NOVA BATALHA DE Os Viriatos",
+            description=f"👉 Depositem o loot na tab da guild\n📺 Postem as vossas VODS\n✍️ A vossa presença foi anotada\n\n🕒 {timestamp}",
+            url=battle_url,
+            color=0
+        )
+        embed.set_image(url="https://cdn.discordapp.com/attachments/1366525638621528074/1379488133355147375/albion_zvz.jpeg")
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send("❌ A guilda Os Viriatos não teve 10+ membros nesta batalha.")
 
 # 🔄 Ativar servidor Flask
 keep_alive()
@@ -99,11 +103,6 @@ else:
     print("🚀 Token carregado. Iniciando bot...")
     try:
         bot.run(token)
-    except Exception as e:
-        print("❌ ERRO ao iniciar o bot:", e)
-        while True:
-            time.sleep(60)
-
     except Exception as e:
         print("❌ ERRO ao iniciar o bot:", e)
         while True:
