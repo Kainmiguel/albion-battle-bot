@@ -4,14 +4,31 @@ import requests
 from bs4 import BeautifulSoup
 import os
 import re
+from flask import Flask
+from threading import Thread
 
+# 🔧 Flask para manter Railway ativo
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "✅ Bot Viriatos ativo!"
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
+# 🤖 Configuração do bot Discord
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"{bot.user} está online com modo DEBUG! 🛠️")
+    print(f"{bot.user} está online com modo DEBUG + Flask ativo! 🛠️")
 
 @bot.event
 async def on_message(message):
@@ -61,6 +78,14 @@ async def forcar_batalha(ctx):
         embed.set_image(url="https://cdn.discordapp.com/attachments/1366525638621528074/1379488133355147375/albion_zvz.jpeg")
         await ctx.send(embed=embed)
         return
+
+    await ctx.send("❌ Nenhuma batalha com 10+ membros da guilda foi encontrada.")
+
+# 🔄 Ativar o servidor Flask
+keep_alive()
+
+# 🚀 Iniciar o bot Discord
+bot.run(os.getenv("DISCORD_TOKEN"))
 
     await ctx.send("❌ Nenhuma batalha com 10+ membros da guilda foi encontrada.")
 
