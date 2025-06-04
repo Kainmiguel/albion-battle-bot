@@ -45,7 +45,7 @@ def buscar_top_jogador(tipo):
         print(f"[ERRO] Nomeações - {tipo}:", e)
         return None
 
-@bot.command(name="nomeacoes")
+@bot.command(name="nomeacoes", aliases=["nomeação", "nomeaçao", "nomeaçãoes"])
 async def nomeacoes(ctx):
     await ctx.send("📜 A recolher dados das nomeações gloriosas da semana...")
 
