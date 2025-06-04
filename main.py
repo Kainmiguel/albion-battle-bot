@@ -11,8 +11,9 @@ import logging
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_NAME = "Os Viriatos"
 channel_id_str = os.getenv("DISCORD_CHANNEL_ID")
-if channel_id_str is None:
-    raise ValueError("A variável de ambiente DISCORD_CHANNEL_ID não está definida.")
+if not channel_id_str:
+    print("[AVISO] Variável DISCORD_CHANNEL_ID não definida. Usando valor padrão de teste.")
+    channel_id_str = "1364385962590867483"  # Valor real informado pelo utilizador
 CHANNEL_ID = int(channel_id_str)
 MIN_MEMBERS = 5
 
@@ -27,9 +28,6 @@ app = Flask(__name__)
 @app.route("/")
 def home():
     return "Bot ativo!"
-
-def run_flask():
-    app.run(host="0.0.0.0", port=8080)
 
 # Web scraping AlbionBattles
 def get_latest_battle_link(min_members=MIN_MEMBERS):
@@ -87,7 +85,15 @@ async def forcar_batalha(ctx):
 async def on_ready():
     print(f"{bot.user} está online com scraping AlbionBB ativo! ⚔️")
 
+def start_flask():
+    print("🌐 A iniciar servidor Flask em thread paralela.")
+    thread = threading.Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": 8080})
+    thread.daemon = True
+    thread.start()
+
 if __name__ == "__main__":
-    threading.Thread(target=run_flask).start()
+    if os.getenv("ENABLE_FLASK") == "1":
+        start_flask()
+
     print("🚀 Bot iniciado com AlbionBB scraping.")
     bot.run(TOKEN)
