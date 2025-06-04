@@ -38,7 +38,7 @@ def get_latest_battle_link(min_members=MIN_MEMBERS):
     }
 
     try:
-        res = requests.get(url, headers=headers, timeout=10)  # Sem SSL verify, com timeout
+        res = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
         battle_links = soup.select("a[href^='/battles/']")
 
@@ -85,14 +85,24 @@ async def forcar_batalha(ctx):
 async def on_ready():
     print(f"{bot.user} está online com scraping AlbionBB ativo! ⚔️")
 
-async def main():
+async def keep_alive():
     if os.getenv("ENABLE_FLASK") == "1":
         thread = threading.Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": 8080})
         thread.daemon = True
         thread.start()
 
-    print("🚀 Bot iniciado com AlbionBB scraping.")
-    await bot.start(TOKEN)
+async def main():
+    try:
+        await keep_alive()
+        print("🚀 Bot iniciado com AlbionBB scraping.")
+        await bot.start(TOKEN)
+    except Exception as e:
+        print("[ERRO] Exceção durante execução principal:", e)
+    finally:
+        print("[INFO] Bot terminou ou foi encerrado.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("[INFO] Encerrado manualmente.")
