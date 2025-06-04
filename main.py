@@ -32,14 +32,13 @@ def home():
 
 # Web scraping AlbionBattles
 def get_latest_battle_link(min_members=MIN_MEMBERS):
-    url = "https://eu.albionbattles.com/?search=Os+Viriatos"
+    url = "http://eu.albionbattles.com/?search=Os+Viriatos"  # Alterado para HTTP
     headers = {
         "User-Agent": "Mozilla/5.0"
-        # "Host" cabeçalho removido para evitar erro SSL
     }
 
     try:
-        res = requests.get(url, headers=headers, verify=False)  # ⚠️ DESATIVA SSL PARA TESTES
+        res = requests.get(url, headers=headers, timeout=10)  # Sem SSL verify, com timeout
         soup = BeautifulSoup(res.text, "html.parser")
         battle_links = soup.select("a[href^='/battles/']")
 
@@ -50,8 +49,8 @@ def get_latest_battle_link(min_members=MIN_MEMBERS):
                 continue
             seen.add(href)
 
-            battle_url = f"https://eu.albionbattles.com{href}"
-            battle_page = requests.get(battle_url, headers=headers, verify=False)
+            battle_url = f"http://eu.albionbattles.com{href}"
+            battle_page = requests.get(battle_url, headers=headers, timeout=10)
             battle_soup = BeautifulSoup(battle_page.text, "html.parser")
 
             guilds = battle_soup.select("div.flex.items-center.space-x-2 span.font-semibold")
