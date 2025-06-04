@@ -1,4 +1,5 @@
 discord.py
 requests
+certifi
 beautifulsoup4
 flask
