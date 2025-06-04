@@ -15,7 +15,7 @@ if not channel_id_str:
     print("[AVISO] Variável DISCORD_CHANNEL_ID não definida. Usando valor padrão de teste.")
     channel_id_str = "1364385962590867483"  # Valor real informado pelo utilizador
 CHANNEL_ID = int(channel_id_str)
-MIN_MEMBERS = 1
+MIN_MEMBERS = 5
 
 # Intents e bot
 intents = discord.Intents.default()
@@ -31,7 +31,7 @@ def home():
 
 # Web scraping AlbionBattles
 def get_latest_battle_link(min_members=MIN_MEMBERS):
-    url = "http://eu.albionbattles.com/?search=Os+Viriatos"
+    url = "https://eu.albionbattles.com/?search=Os+Viriatos"
     headers = {
         "User-Agent": "Mozilla/5.0"
     }
@@ -48,7 +48,7 @@ def get_latest_battle_link(min_members=MIN_MEMBERS):
                 continue
             seen.add(href)
 
-            battle_url = f"http://eu.albionbattles.com{href}"
+            battle_url = f"https://eu.albionbattles.com{href}"
             battle_page = requests.get(battle_url, headers=headers, timeout=10)
             battle_soup = BeautifulSoup(battle_page.text, "html.parser")
 
