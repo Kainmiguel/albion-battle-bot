@@ -20,6 +20,7 @@ MIN_MEMBERS = 5
 # Intents e bot
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Flask app para Railway
@@ -30,6 +31,7 @@ def home():
     return "Bot ativo!"
 
 # Web scraping AlbionBattles
+
 def get_latest_battle_link(min_members=MIN_MEMBERS):
     url = "https://eu.albionbattles.com/?search=Os+Viriatos"
     headers = {
@@ -68,6 +70,50 @@ def get_latest_battle_link(min_members=MIN_MEMBERS):
     except Exception as e:
         print("[ERRO] Falha ao verificar batalhas:", e)
         return None
+
+# Nomeações semanais
+
+def buscar_top_jogador(tipo):
+    endpoint = {
+        "pvp": "https://www.tools4albion.com/api/top/week/pvp",
+        "pve": "https://www.tools4albion.com/api/top/week/pve",
+        "coleta": "https://www.tools4albion.com/api/top/week/gathering"
+    }.get(tipo)
+    try:
+        res = requests.get(endpoint, timeout=10)
+        if res.status_code == 200:
+            data = res.json()
+            return data[0]["name"] if data else None
+        return None
+    except Exception as e:
+        print(f"[ERRO] Nomeações - {tipo}:", e)
+        return None
+
+@bot.command(name="nomeacoes")
+async def nomeacoes(ctx):
+    await ctx.send("📜 A recolher dados das nomeações gloriosas da semana...")
+
+    pvp = buscar_top_jogador("pvp")
+    pve = buscar_top_jogador("pve")
+    coleta = buscar_top_jogador("coleta")
+
+    guild = discord.utils.get(bot.guilds, name=GUILD_NAME)
+
+    def menciona(nome):
+        membro = discord.utils.get(guild.members, name=nome)
+        return membro.mention if membro else f"**{nome}**"
+
+    msg = "🏆 **NOMEAÇÕES DA SEMANA - OS VIRIATOS** 🏆\n\n"
+    msg += f"🩸 PvP Mais Sangrento: {menciona(pvp) if pvp else 'Não encontrado'}\n"
+    msg += f"⚔️ PvE Mais Incansável: {menciona(pve) if pve else 'Não encontrado'}\n"
+    msg += f"⛏️ Coletor Supremo: {menciona(coleta) if coleta else 'Não encontrado'}\n\n"
+    msg += "🔥 Honra o passado, constrói o futuro!"
+
+    canal = bot.get_channel(CHANNEL_ID)
+    if canal:
+        await canal.send(msg)
+    else:
+        await ctx.send("[ERRO] Canal não encontrado.")
 
 # Comando Discord
 @bot.command(name="forcarbatalha")
