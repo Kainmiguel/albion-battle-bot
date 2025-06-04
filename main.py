@@ -96,6 +96,9 @@ async def main():
         await keep_alive()
         print("🚀 Bot iniciado com AlbionBB scraping.")
         await bot.start(TOKEN)
+        # Manter o processo Railway ativo mesmo se o bot terminar
+        while True:
+            await asyncio.sleep(60)
     except Exception as e:
         print("[ERRO] Exceção durante execução principal:", e)
     finally:
