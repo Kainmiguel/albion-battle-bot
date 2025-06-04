@@ -4,6 +4,7 @@ from discord.ext import commands
 from bs4 import BeautifulSoup
 import requests
 from flask import Flask
+import asyncio
 import threading
 import logging
 
@@ -33,8 +34,8 @@ def home():
 def get_latest_battle_link(min_members=MIN_MEMBERS):
     url = "https://eu.albionbattles.com/?search=Os+Viriatos"
     headers = {
-        "User-Agent": "Mozilla/5.0",
-        "Host": "eu.albionbattles.com"
+        "User-Agent": "Mozilla/5.0"
+        # "Host" cabeçalho removido para evitar erro SSL
     }
 
     try:
@@ -85,15 +86,14 @@ async def forcar_batalha(ctx):
 async def on_ready():
     print(f"{bot.user} está online com scraping AlbionBB ativo! ⚔️")
 
-def start_flask():
-    print("🌐 A iniciar servidor Flask em thread paralela.")
-    thread = threading.Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": 8080})
-    thread.daemon = True
-    thread.start()
-
-if __name__ == "__main__":
+async def main():
     if os.getenv("ENABLE_FLASK") == "1":
-        start_flask()
+        thread = threading.Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": 8080})
+        thread.daemon = True
+        thread.start()
 
     print("🚀 Bot iniciado com AlbionBB scraping.")
-    bot.run(TOKEN)
+    await bot.start(TOKEN)
+
+if __name__ == "__main__":
+    asyncio.run(main())
