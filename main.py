@@ -30,7 +30,9 @@ def run_flask():
 
 # Web scraping AlbionBattles
 def get_latest_battle_link(min_members=MIN_MEMBERS):
-    url = "https://eu.albionbattles.com/?search=Os+Viriatos"
+     # Encode the guild name for the query string so guilds with spaces work
+    search_query = GUILD_NAME.replace(" ", "+")
+    url = f"https://eu.albionbattles.com/?search={search_query}"
     headers = {
         "User-Agent": "Mozilla/5.0"
     }
