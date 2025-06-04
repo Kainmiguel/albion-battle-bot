@@ -10,7 +10,15 @@ import logging
 # Configurações
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_NAME = "Os Viriatos"
-CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))  # Coloca o ID correto no .env
+
+# Convert DISCORD_CHANNEL_ID if provided; otherwise keep None so the bot can
+# start even without this optional configuration.
+_channel_env = os.getenv("DISCORD_CHANNEL_ID")
+try:
+    CHANNEL_ID = int(_channel_env) if _channel_env is not None else None
+except ValueError:
+    CHANNEL_ID = None
+
 MIN_MEMBERS = 5
 
 # Intents e bot
