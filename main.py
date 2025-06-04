@@ -15,7 +15,7 @@ if not channel_id_str:
     print("[AVISO] Variável DISCORD_CHANNEL_ID não definida. Usando valor padrão de teste.")
     channel_id_str = "1364385962590867483"  # Valor real informado pelo utilizador
 CHANNEL_ID = int(channel_id_str)
-MIN_MEMBERS = 5
+MIN_MEMBERS = 1
 
 # Intents e bot
 intents = discord.Intents.default()
