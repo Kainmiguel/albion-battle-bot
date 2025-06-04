@@ -84,12 +84,6 @@ async def forcar_batalha(ctx):
 async def on_ready():
     print(f"{bot.user} está online com scraping AlbionBB ativo! ⚔️")
 
-def start_flask():
-    if os.getenv("ENABLE_FLASK") == "1":
-        thread = threading.Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": 8080})
-        thread.daemon = True
-        thread.start()
-
 def start_bot():
     try:
         print("🚀 Bot iniciado com AlbionBB scraping.")
@@ -98,14 +92,13 @@ def start_bot():
         print("[ERRO] Falha ao iniciar o bot:", e)
 
 if __name__ == "__main__":
-    import time
     try:
-        start_flask()
         bot_thread = threading.Thread(target=start_bot)
         bot_thread.daemon = True
         bot_thread.start()
-        while True:
-            time.sleep(60)
+
+        print("🌐 Iniciando servidor Flask como processo principal.")
+        app.run(host="0.0.0.0", port=8080)
     except KeyboardInterrupt:
         print("[INFO] Encerrado manualmente.")
     except Exception as e:
