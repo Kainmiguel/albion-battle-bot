@@ -91,10 +91,14 @@ def start_flask():
         thread.start()
 
 if __name__ == "__main__":
+    import time
     try:
         start_flask()
         print("🚀 Bot iniciado com AlbionBB scraping.")
         bot.run(TOKEN)
+        # Se o bot sair por qualquer motivo, manter o processo Railway ativo
+        while True:
+            time.sleep(60)
     except KeyboardInterrupt:
         print("[INFO] Encerrado manualmente.")
     except Exception as e:
