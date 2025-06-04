@@ -4,7 +4,6 @@ from discord.ext import commands
 from bs4 import BeautifulSoup
 import requests
 from flask import Flask
-import asyncio
 import threading
 import logging
 
@@ -32,7 +31,7 @@ def home():
 
 # Web scraping AlbionBattles
 def get_latest_battle_link(min_members=MIN_MEMBERS):
-    url = "http://eu.albionbattles.com/?search=Os+Viriatos"  # Alterado para HTTP
+    url = "http://eu.albionbattles.com/?search=Os+Viriatos"
     headers = {
         "User-Agent": "Mozilla/5.0"
     }
@@ -85,27 +84,18 @@ async def forcar_batalha(ctx):
 async def on_ready():
     print(f"{bot.user} está online com scraping AlbionBB ativo! ⚔️")
 
-async def keep_alive():
+def start_flask():
     if os.getenv("ENABLE_FLASK") == "1":
         thread = threading.Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": 8080})
         thread.daemon = True
         thread.start()
 
-async def main():
-    try:
-        await keep_alive()
-        print("🚀 Bot iniciado com AlbionBB scraping.")
-        await bot.start(TOKEN)
-        # Manter o processo Railway ativo mesmo se o bot terminar
-        while True:
-            await asyncio.sleep(60)
-    except Exception as e:
-        print("[ERRO] Exceção durante execução principal:", e)
-    finally:
-        print("[INFO] Bot terminou ou foi encerrado.")
-
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        start_flask()
+        print("🚀 Bot iniciado com AlbionBB scraping.")
+        bot.run(TOKEN)
     except KeyboardInterrupt:
         print("[INFO] Encerrado manualmente.")
+    except Exception as e:
+        print("[ERRO] Exceção durante execução do bot:", e)
