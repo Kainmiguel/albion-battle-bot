@@ -90,16 +90,23 @@ def start_flask():
         thread.daemon = True
         thread.start()
 
+def start_bot():
+    try:
+        print("🚀 Bot iniciado com AlbionBB scraping.")
+        bot.run(TOKEN)
+    except Exception as e:
+        print("[ERRO] Falha ao iniciar o bot:", e)
+
 if __name__ == "__main__":
     import time
     try:
         start_flask()
-        print("🚀 Bot iniciado com AlbionBB scraping.")
-        bot.run(TOKEN)
-        # Se o bot sair por qualquer motivo, manter o processo Railway ativo
+        bot_thread = threading.Thread(target=start_bot)
+        bot_thread.daemon = True
+        bot_thread.start()
         while True:
             time.sleep(60)
     except KeyboardInterrupt:
         print("[INFO] Encerrado manualmente.")
     except Exception as e:
-        print("[ERRO] Exceção durante execução do bot:", e)
+        print("[ERRO] Exceção no processo principal:", e)
