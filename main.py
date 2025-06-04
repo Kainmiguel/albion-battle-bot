@@ -10,14 +10,10 @@ import logging
 # Configurações
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_NAME = "Os Viriatos"
-# Convert DISCORD_CHANNEL_ID if provided; otherwise keep None so the bot can
-# start even without this optional configuration.
-_channel_env = os.getenv("DISCORD_CHANNEL_ID")
-try:
-    CHANNEL_ID = int(_channel_env) if _channel_env is not None else None
-except ValueError:
-    CHANNEL_ID = None
-
+channel_id_str = os.getenv("DISCORD_CHANNEL_ID")
+if channel_id_str is None:
+    raise ValueError("A variável de ambiente DISCORD_CHANNEL_ID não está definida.")
+CHANNEL_ID = int(channel_id_str)
 MIN_MEMBERS = 5
 
 # Intents e bot
@@ -25,7 +21,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Flask app para manter vivo no Railway
+# Flask app para Railway
 app = Flask(__name__)
 
 @app.route("/")
@@ -37,15 +33,14 @@ def run_flask():
 
 # Web scraping AlbionBattles
 def get_latest_battle_link(min_members=MIN_MEMBERS):
-     # Encode the guild name for the query string so guilds with spaces work
-    search_query = GUILD_NAME.replace(" ", "+")
-    url = f"https://eu.albionbattles.com/?search={search_query}"
+    url = "https://eu.albionbattles.com/?search=Os+Viriatos"
     headers = {
-        "User-Agent": "Mozilla/5.0"
+        "User-Agent": "Mozilla/5.0",
+        "Host": "eu.albionbattles.com"
     }
 
     try:
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=headers, verify=False)  # ⚠️ DESATIVA SSL PARA TESTES
         soup = BeautifulSoup(res.text, "html.parser")
         battle_links = soup.select("a[href^='/battles/']")
 
@@ -57,7 +52,7 @@ def get_latest_battle_link(min_members=MIN_MEMBERS):
             seen.add(href)
 
             battle_url = f"https://eu.albionbattles.com{href}"
-            battle_page = requests.get(battle_url, headers=headers)
+            battle_page = requests.get(battle_url, headers=headers, verify=False)
             battle_soup = BeautifulSoup(battle_page.text, "html.parser")
 
             guilds = battle_soup.select("div.flex.items-center.space-x-2 span.font-semibold")
